@@ -27,9 +27,9 @@ resource "aws_instance" "blog" {
   user_data = <<-EOF
               #!/bin/bash
               dnf update -y
-              dnf install -y java-17-amazon-corretto-devel tomcat
-              systemctl enable tomcat
-              systemctl start tomcat
+              dnf install -y java-17-amazon-corretto-devel tomcat10 tomcat10-webapps tomcat10-admin-webapps
+              systemctl enable tomcat10
+              systemctl start tomcat10
               EOF
 
   tags = {
