@@ -46,14 +46,20 @@ module "blog_sg" {
  
   ingress_rules = {
       http = {
-        from_port   = 80
-        to_port     = 80
+        from_port   = 8080
+        to_port     = 8080
         ip_protocol = "tcp"
         cidr_ipv4   = "0.0.0.0/0"
       }
       https = {
         from_port   = 443
         to_port     = 443
+        ip_protocol = "tcp"
+        cidr_ipv4   = "0.0.0.0/0"
+      }
+      ssh = {
+        from_port   = 22
+        to_port     = 22
         ip_protocol = "tcp"
         cidr_ipv4   = "0.0.0.0/0"
       }
@@ -67,7 +73,7 @@ module "blog_sg" {
     }
 }
 
-
+/*
 resource "aws_security_group" "blog" {
   name        = "blog"
   description = "Allow http and https in. Allow everything out"
@@ -113,3 +119,4 @@ resource "aws_security_group_rule" "blog_everthing_out" {
 
   security_group_id = aws_security_group.blog.id 
 }
+*/
