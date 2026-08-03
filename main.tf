@@ -57,39 +57,39 @@ module "blog_sg" {
 
   vpc_id = module.blog_vpc.vpc_id
 
-  ingress_rules = {
-    http = {
+  # Use ingress_with_cidr_blocks for custom port mappings
+  ingress_with_cidr_blocks = [
+    {
       from_port   = 80
       to_port     = 80
-      ip_protocol = "tcp"
-      cidr_ipv4   = "0.0.0.0/0"
-    }
-    tomcat = {
+      protocol    = "tcp"
+      description = "HTTP"
+      cidr_blocks = "0.0.0.0/0"
+    },
+    {
       from_port   = 8080
       to_port     = 8080
-      ip_protocol = "tcp"
-      cidr_ipv4   = "0.0.0.0/0"
-    }
-    https = {
+      protocol    = "tcp"
+      description = "Tomcat"
+      cidr_blocks = "0.0.0.0/0"
+    },
+    {
       from_port   = 443
       to_port     = 443
-      ip_protocol = "tcp"
-      cidr_ipv4   = "0.0.0.0/0"
-    }
-    ssh = {
+      protocol    = "tcp"
+      description = "HTTPS"
+      cidr_blocks = "0.0.0.0/0"
+    },
+    {
       from_port   = 22
       to_port     = 22
-      ip_protocol = "tcp"
-      cidr_ipv4   = "0.0.0.0/0"
+      protocol    = "tcp"
+      description = "SSH"
+      cidr_blocks = "0.0.0.0/0"
     }
-  }
+  ]
 
-  egress_rules = {
-    all = {
-      ip_protocol = "-1"
-      cidr_ipv4   = "0.0.0.0/0"
-    }
-  }
+  egress_rules = ["all-all"]
 }
 
 module "blog_alb" {
@@ -142,6 +142,9 @@ resource "aws_lb_target_group_attachment" "test" {
   port             = 8080 # FIX: Attach target on Tomcat's port
 }
 
+
+
+#############################################################
 /* 
 # security group without module
 resource "aws_security_group" "blog" {
