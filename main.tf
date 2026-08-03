@@ -99,7 +99,7 @@ module "blog_alb" {
   vpc_id  = module.blog_vpc.vpc_id
   subnets = module.blog_vpc.public_subnets
 
-  aws_security_groups = [module.blog_sg.security_group.id]
+  aws_security_groups = [module.blog_sg.id]
 
   listeners = {
     blog-http = {
