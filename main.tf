@@ -129,7 +129,7 @@ resource "aws_lb_target_group" "blog" {
   port     = 8080 # FIX: Route traffic to Tomcat's listening port
   protocol = "HTTP"
   vpc_id   = module.blog_vpc.vpc_id
-
+/*
   health_check {
     path                = "/"
     port                = "8080"
@@ -140,9 +140,10 @@ resource "aws_lb_target_group" "blog" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
+*/
 }
 
-resource "aws_lb_target_group_attachment" "test" {
+resource "aws_lb_target_group_attachment" "blog" {
   target_group_arn = aws_lb_target_group.blog.arn
   target_id        = aws_instance.blog.id
   port             = 8080 # FIX: Attach target on Tomcat's port
