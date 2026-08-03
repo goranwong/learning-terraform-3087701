@@ -57,39 +57,45 @@ module "blog_sg" {
 
   vpc_id = module.blog_vpc.vpc_id
 
-  # Use ingress_with_cidr_blocks for custom port mappings
-  ingress_with_cidr_blocks = [
-    {
+  # Correct v6.0.0 syntax: structured map of rules
+  ingress_rules = {
+    http = {
       from_port   = 80
       to_port     = 80
-      protocol    = "tcp"
-      description = "HTTP"
-      cidr_blocks = "0.0.0.0/0"
-    },
-    {
+      ip_protocol = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
+      description = "HTTP for ALB"
+    }
+    tomcat = {
       from_port   = 8080
       to_port     = 8080
-      protocol    = "tcp"
+      ip_protocol = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
       description = "Tomcat"
-      cidr_blocks = "0.0.0.0/0"
-    },
-    {
+    }
+    https = {
       from_port   = 443
       to_port     = 443
-      protocol    = "tcp"
+      ip_protocol = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
       description = "HTTPS"
-      cidr_blocks = "0.0.0.0/0"
-    },
-    {
+    }
+    ssh = {
       from_port   = 22
       to_port     = 22
-      protocol    = "tcp"
+      ip_protocol = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
       description = "SSH"
-      cidr_blocks = "0.0.0.0/0"
     }
-  ]
+  }
 
-  egress_rules = ["all-all"]
+  egress_rules = {
+    all = {
+      ip_protocol = "-1"
+      cidr_ipv4   = "0.0.0.0/0"
+      description = "Allow all egress traffic"
+    }
+  }
 }
 
 module "blog_alb" {
