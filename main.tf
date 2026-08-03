@@ -13,7 +13,6 @@ data "aws_ami" "app_ami" {
   }
 }
 
-
 module "blog_vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
@@ -26,22 +25,18 @@ module "blog_vpc" {
 
   enable_nat_gateway = true
 
-
   tags = {
-    Terraform = "true"
+    Terraform   = "true"
     Environment = "dev"
   }
 }
 
 resource "aws_instance" "blog" {
-  ami           = data.aws_ami.app_ami.id
-  instance_type = var.instance_type
+  ami                    = data.aws_ami.app_ami.id
+  instance_type          = var.instance_type
   vpc_security_group_ids = [module.blog_sg.id]
+  subnet_id              = module.blog_vpc.public_subnets[0]
 
-  subnet_id = module.blog_vpc.public_subnets[0]
-
-
-# Install Java and Tomcat automatically on Amazon Linux 2023
   user_data = <<-EOF
               #!/bin/bash
               dnf update -y
@@ -58,39 +53,44 @@ resource "aws_instance" "blog" {
 module "blog_sg" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "6.0.0"
-  name = "blog_new"
-  
+  name    = "blog_new"
+
   vpc_id = module.blog_vpc.vpc_id
- 
+
   ingress_rules = {
-      http = {
-        from_port   = 8080
-        to_port     = 8080
-        ip_protocol = "tcp"
-        cidr_ipv4   = "0.0.0.0/0"
-      }
-      https = {
-        from_port   = 443
-        to_port     = 443
-        ip_protocol = "tcp"
-        cidr_ipv4   = "0.0.0.0/0"
-      }
-      ssh = {
-        from_port   = 22
-        to_port     = 22
-        ip_protocol = "tcp"
-        cidr_ipv4   = "0.0.0.0/0"
-      }
+    http = {
+      from_port   = 80
+      to_port     = 80
+      ip_protocol = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
     }
+    tomcat = {
+      from_port   = 8080
+      to_port     = 8080
+      ip_protocol = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
+    https = {
+      from_port   = 443
+      to_port     = 443
+      ip_protocol = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
+    ssh = {
+      from_port   = 22
+      to_port     = 22
+      ip_protocol = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
+  }
 
-    egress_rules = {
-      all = {
-        ip_protocol = "-1"
-        cidr_ipv4   = "0.0.0.0/0"
-      }
+  egress_rules = {
+    all = {
+      ip_protocol = "-1"
+      cidr_ipv4   = "0.0.0.0/0"
     }
+  }
 }
-
 
 module "blog_alb" {
   source = "terraform-aws-modules/alb/aws"
@@ -99,7 +99,9 @@ module "blog_alb" {
   vpc_id  = module.blog_vpc.vpc_id
   subnets = module.blog_vpc.public_subnets
 
-  aws_security_groups = [module.blog_sg.id]
+  # FIX: Correct argument name + disable module's internal SG creation
+  create_security_group = false
+  security_groups       = [module.blog_sg.id]
 
   listeners = {
     blog-http = {
@@ -114,20 +116,30 @@ module "blog_alb" {
   tags = {
     Environment = "dev"
   }
- 
 }
 
 resource "aws_lb_target_group" "blog" {
-  name     = "blog"
-  port     = 80
+  name     = "blog-tg"
+  port     = 8080 # FIX: Route traffic to Tomcat's listening port
   protocol = "HTTP"
   vpc_id   = module.blog_vpc.vpc_id
+
+  health_check {
+    path                = "/"
+    port                = "8080"
+    protocol            = "HTTP"
+    matcher             = "200,404" # 404 is valid if no root index app exists yet
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
 }
 
 resource "aws_lb_target_group_attachment" "test" {
   target_group_arn = aws_lb_target_group.blog.arn
   target_id        = aws_instance.blog.id
-  port             = 80
+  port             = 8080 # FIX: Attach target on Tomcat's port
 }
 
 /* 
