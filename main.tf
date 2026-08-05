@@ -70,6 +70,7 @@ resource "aws_instance" "blog" {
   instance_type               = var.instance_type
   vpc_security_group_ids      = [module.blog_sg.id]
   subnet_id                   = module.blog_vpc.public_subnets[0]
+  iam_instance_profile         = aws_iam_instance_profile.ec2_ssm_profile.name
   user_data_replace_on_change = true
 
   user_data = <<-EOF
