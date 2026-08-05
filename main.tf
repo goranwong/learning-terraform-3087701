@@ -129,6 +129,8 @@ resource "aws_lb_target_group" "blog" {
   port     = 8080 # FIX: Route traffic to Tomcat's listening port
   protocol = "HTTP"
   vpc_id   = module.blog_vpc.vpc_id
+
+## skip health check for testing 
 /*
   health_check {
     path                = "/"
