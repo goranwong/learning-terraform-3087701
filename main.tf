@@ -13,6 +13,34 @@ data "aws_ami" "app_ami" {
   }
 }
 
+## Add IAM role for session manager
+
+resource "aws_iam_role" "ec2_ssm_role" {
+  name = "blog-ec2-ssm-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_core" {
+  role       = aws_iam_role.ec2_ssm_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "ec2_ssm_profile" {
+  name = "blog-ec2-ssm-profile"
+  role = aws_iam_role.ec2_ssm_role.name
+}
+ 
+
 module "blog_vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
@@ -39,6 +67,8 @@ resource "aws_instance" "blog" {
 
   user_data = <<-EOF
               #!/bin/bash
+              set -euxo pipfail
+              exec > >(tee /var/log/user-data.log) 2>&1
               dnf update -y
               dnf install -y java-17-amazon-corretto-devel tomcat10 tomcat10-webapps tomcat10-admin-webapps
               systemctl enable tomcat10
