@@ -13,7 +13,7 @@ data "aws_ami" "app_ami" {
   }
 }
 
-## Add IAM role for session manager
+## from -claude - Add IAM role for session manager
 
 resource "aws_iam_role" "ec2_ssm_role" {
   name = "blog-ec2-ssm-role"
@@ -30,6 +30,8 @@ resource "aws_iam_role" "ec2_ssm_role" {
   })
 }
 
+
+
 resource "aws_iam_role_policy_attachment" "ssm_core" {
   role       = aws_iam_role.ec2_ssm_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
@@ -40,6 +42,7 @@ resource "aws_iam_instance_profile" "ec2_ssm_profile" {
   role = aws_iam_role.ec2_ssm_role.name
 }
  
+##
 
 module "blog_vpc" {
   source = "terraform-aws-modules/vpc/aws"
@@ -52,6 +55,9 @@ module "blog_vpc" {
   public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
 
   enable_nat_gateway = true
+
+  ## enable public IP for troubleshooting
+  map_public_ip_on_launch = true
 
   tags = {
     Terraform   = "true"
