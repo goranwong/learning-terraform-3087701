@@ -72,14 +72,14 @@ resource "aws_instance" "blog" {
   subnet_id              = module.blog_vpc.public_subnets[0]
 
   user_data = <<-EOF
-              #!/bin/bash
-              set -euxo pipfail
-              exec > >(tee /var/log/user-data.log) 2>&1
-              dnf update -y
-              dnf install -y java-17-amazon-corretto-devel tomcat10 tomcat10-webapps tomcat10-admin-webapps
-              systemctl enable tomcat10
-              systemctl start tomcat10
-              EOF
+                #!/bin/bash
+                set -euxo pipefail
+                exec > >(tee /var/log/user-data.log) 2>&1
+                dnf update -y
+                dnf install -y java-17-amazon-corretto-devel tomcat10 tomcat10-webapps tomcat10-admin-webapps
+                systemctl enable tomcat10
+                systemctl start tomcat10
+                EOF
 
   tags = {
     Name = "Learning Terraform"
